@@ -16,3 +16,42 @@ exports.createPages = async ({ actions }) => {
     defer: true,
   })
 }
+
+exports.createResolvers = ({ createResolvers }) => {
+  const resolvers = {
+    ContentfulPageJson: {
+      programs: {
+        type: ['ProgramJson'],
+        resolve: async (source, args, context, info) => {
+          const { entries } = await context.nodeModel.findAll({
+            query: {
+              filter: {
+                uuid: { in: source.uuidList },
+              },
+            },
+            type: 'ProgramJson',
+          });
+          return entries;
+        },
+      },
+    },
+    ProgramJson: {
+      contentfulPage: {
+        type: 'ContentfulPageJson',
+        resolve: async (source, args, context, info) => {
+          const node = await context.nodeModel.findOne({
+            query: {
+              filter: {
+                uuidList: { eq: source.uuid },
+              },
+            },
+            type: 'ContentfulPageJson',
+          });
+          return node;
+        },
+      },
+    },
+  };
+
+  createResolvers(resolvers);
+}
